@@ -3,13 +3,16 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    # Midnight in Asia/Taipei. GitHub may delay scheduled runs.
+    - cron: '0 16 * * *'
 permissions:
   contents: read
   pages: write
   id-token: write
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   deploy:
     environment:
@@ -18,10 +21,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test sync
+        run: node --test scripts/sync-album.test.mjs
+      - uses: actions/cache/restore@v4
+        with:
+          path: .album-cache
+          key: album-v1-${{ hashFiles('album-config.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            album-v1-${{ hashFiles('album-config.json') }}-
+      - name: Prepare website
+        run: |
+          mkdir -p _site
+          cp index.html app.js style.css .nojekyll _site/
+          cp -r assets _site/
+      - name: Sync Google Photos
+        run: node scripts/sync-album.mjs
+      - uses: actions/cache/save@v4
+        with:
+          path: .album-cache
+          key: album-v1-${{ hashFiles('album-config.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
