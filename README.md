@@ -18,15 +18,14 @@ Explore a collection of in-game photography from **Arknights: Endfield**, captur
 
 圖片為個人遊戲攝影；遊戲內容及商標權利屬各自權利人。本專案不額外授予圖片的轉載授權。
 
-## Google 相簿每日同步
+## Google 相簿每日更新圖片網址
 
-相簿來源設定於 `album-config.json`，目前使用 https://photos.app.goo.gl/ksexQQETNyVHLbty9 。
-Actions 每天台灣時間 00:00（UTC 16:00）同步，也可由 Actions 的 Run workflow 手動執行；推送 main 也會同步部署。GitHub 排程可能延遲，並非保證準時執行。
+來源設定於 `album-config.json`。每天台灣時間 00:00（UTC 16:00）解析分享相簿，更新遠端圖片網址清單並部署；GitHub 排程可能延遲。推送 main 或手動 Run workflow 也會更新。
 
-以 Google 照片 ID 判斷是否已下載；已知 ID 且本機檔案雜湊正確時完全不下載圖片。新 ID 必須下載一次才能用 SHA-256 比較內容，相同內容只保留一份。首次同步也需下載以建立 ID 對照，既有 images 中相同位元組的圖片會沿用。此功能不是視覺相似圖片辨識；相同 ID 的遠端編輯目前不會重新下載。
+攝影集圖片由訪客瀏覽器直接向 Google 載入，不下載圖片、不建立 Actions 圖片快取，也不將相簿照片寫回 main。首頁指定背景沿用儲存庫內既有圖片。檢視原圖使用 Google 原圖連結。
 
-圖片與 ID 紀錄存在 GitHub Actions 快取，不自動寫入 main。快取遭清除或淘汰後會重新下載。產出的 `_site` 才會部署，網站清單依完整相簿內容更新，移除的照片不再出現在新部署中。
+每天重新取得網址；分享頁圖片連結沒有永久有效保證，若在下次更新前失效仍可能破圖。採非官方分享頁解析，目前不支援分頁或影片；解析失敗時不部署，保留上一次網站。關閉相簿分享不保證立即下架已發布內容。
 
-採非官方分享頁解析；需保持相簿可透過連結讀取。遇到 Google 格式變更、空相簿、影片或分頁未完整取得時，流程會失敗並保留上一版部署，不會清空網站。目前只支援分享頁首批即可完整取得的相簿；超過首批容量需另行實作分頁。關閉分享也會保留上一版，若需下架請另外停用 Pages。
+以照片 ID 去重，不再下載內容進行雜湊比對。相簿移除的照片會在下次成功更新清單後移除。照片總數由清單自動顯示。
 
-測試：`node --test scripts/sync-album.test.mjs`（Node.js 22 以上）。變更合併至 main 後排程才會生效；公開儲存庫長期無活動時 GitHub 可能停用排程，屆時需在 Actions 重新啟用。
+測試：`node --test scripts/sync-album.test.mjs`（Node.js 22 以上）。

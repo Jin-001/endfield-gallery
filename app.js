@@ -5,6 +5,10 @@ let current = 0;
 let opener;
 function render() {
   gallery.replaceChildren();
+  document.querySelector('.hero-bottom > span:last-child').textContent = `${photos.length} FRAMES`;
+  document.querySelector('.toolbar b').textContent = photos.length;
+  document.querySelector('.collection-heading > p').firstChild.textContent = `${photos.length} 張影像，一段旅程。`;
+  document.querySelector('footer > span:nth-child(3)').textContent = `01 — ${photos.length}`;
   photos.forEach((photo, index) => {
     const figure = document.createElement('figure');
     figure.className = 'photo';
@@ -26,7 +30,7 @@ function showPhoto() {
   const img = document.querySelector('#full-photo'); img.src = photo.src; img.alt = `Endfield 攝影：${photo.name}`;
   document.querySelector('#counter').textContent = `${String(current + 1).padStart(2, '0')} / ${photos.length}`;
   document.querySelector('#photo-name').textContent = photo.name;
-  document.querySelector('#original').href = photo.src;
+  document.querySelector('#original').href = photo.original || photo.src;
 }
 function step(delta) { current = (current + delta + photos.length) % photos.length; showPhoto(); }
 document.querySelector('#previous').addEventListener('click', () => step(-1));

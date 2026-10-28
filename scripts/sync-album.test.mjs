@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { parseAlbum, sync } from './sync-album.mjs';
@@ -17,31 +17,32 @@ test('reject unavailable, empty and incomplete albums', () => {
     assert.throws(() => parseAlbum(html));
 });
 
-test('skip known IDs, deduplicate bytes, reflect removals, preserve output on failure', async () => {
+test('refresh remote URLs without image downloads, reflect removals and preserve output on failure', async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), 'album-test-'));
   try {
-    await mkdir(path.join(root, 'images'));
     await writeFile(path.join(root, 'album-config.json'), JSON.stringify({ url: 'https://example.test/album' }));
-    const png = Buffer.from('89504e470d0a1a0a0000', 'hex');
-    let html = album(['AF1Qone', 'AF1Qtwo']);
-    let downloads = 0;
+    let html = album(['AF1Qone', 'AF1Qtwo', 'AF1Qone']);
     const fetcher = async url => {
-      if (url === 'https://example.test/album') return new Response(html);
-      downloads++; return new Response(png);
+      assert.equal(url, 'https://example.test/album', 'must never request image bytes');
+      return new Response(html);
     };
     await sync(root, fetcher);
-    assert.equal(downloads, 2);
     const output = path.join(root, '_site', 'photos.js');
-    const first = await readFile(output, 'utf8');
-    assert.equal(JSON.parse(first.slice('window.PHOTOS = '.length, -2)).length, 1);
+    const load = async () => JSON.parse((await readFile(output, 'utf8')).slice('window.PHOTOS = '.length, -2));
+    let photos = await load();
+    assert.equal(photos.length, 2);
+    assert.equal(photos[0].src, 'https://lh3.googleusercontent.com/AF1Qone=w1920-h1920');
+    assert.equal(photos[0].original, 'https://lh3.googleusercontent.com/AF1Qone=d');
+    html = album(['AF1Qtwo']).replace('googleusercontent.com/AF1Qtwo', 'googleusercontent.com/refreshed');
     await sync(root, fetcher);
-    assert.equal(downloads, 2, 'second run must not request any image');
-    html = album(['AF1Qtwo']);
-    await sync(root, fetcher);
-    assert.equal(downloads, 2);
+    photos = await load();
+    assert.equal(photos.length, 1);
+    assert.match(photos[0].src, /refreshed=/);
     const before = await readFile(output, 'utf8');
     html = 'unavailable';
     await assert.rejects(sync(root, fetcher));
+    assert.equal(await readFile(output, 'utf8'), before);
+    await assert.rejects(sync(root, async () => new Response('', { status: 503 })));
     assert.equal(await readFile(output, 'utf8'), before);
   } finally { await rm(root, { recursive: true, force: true }); }
 });

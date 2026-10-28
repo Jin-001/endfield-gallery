@@ -26,23 +26,15 @@ jobs:
           node-version: '22'
       - name: Test sync
         run: node --test scripts/sync-album.test.mjs
-      - uses: actions/cache/restore@v4
-        with:
-          path: .album-cache
-          key: album-v1-${{ hashFiles('album-config.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: |
-            album-v1-${{ hashFiles('album-config.json') }}-
       - name: Prepare website
         run: |
           mkdir -p _site
           cp index.html app.js style.css .nojekyll _site/
           cp -r assets _site/
+          mkdir -p _site/images
+          cp images/ENDFIELD_SHARE_1793026161.png _site/images/
       - name: Sync Google Photos
         run: node scripts/sync-album.mjs
-      - uses: actions/cache/save@v4
-        with:
-          path: .album-cache
-          key: album-v1-${{ hashFiles('album-config.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
