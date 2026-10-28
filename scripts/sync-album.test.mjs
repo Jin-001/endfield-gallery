@@ -32,7 +32,7 @@ test('refresh remote URLs without image downloads, reflect removals and preserve
     let photos = await load();
     assert.equal(photos.length, 2);
     assert.equal(photos[0].src, 'https://lh3.googleusercontent.com/AF1Qone=w1920-h1920');
-    assert.equal(photos[0].original, 'https://lh3.googleusercontent.com/AF1Qone=d');
+    assert.equal(photos[0].original, 'https://lh3.googleusercontent.com/AF1Qone=s0');
     html = album(['AF1Qtwo']).replace('googleusercontent.com/AF1Qtwo', 'googleusercontent.com/refreshed');
     await sync(root, fetcher);
     photos = await load();

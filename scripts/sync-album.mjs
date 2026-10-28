@@ -30,7 +30,7 @@ export async function sync(root, fetcher = fetch) {
     return true;
   }).map(photo => ({
     src: `${photo.url}=w1920-h1920`,
-    original: `${photo.url}=d`,
+    original: `${photo.url}=s0`,
     name: `ENDFIELD_SHARE_${Math.floor(photo.timestamp / 1000)}`
   }));
   const output = path.join(root, '_site');

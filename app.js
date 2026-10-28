@@ -1,6 +1,8 @@
 const gallery = document.querySelector('#gallery');
 const viewer = document.querySelector('#viewer');
 let photos = [...window.PHOTOS];
+const hero = window.PHOTOS.find(photo => photo.name === 'ENDFIELD_SHARE_1793026161') || window.PHOTOS[0];
+if (hero) document.querySelector('.hero-image').src = hero.src;
 let current = 0;
 let opener;
 function render() {

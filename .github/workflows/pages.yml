@@ -32,8 +32,6 @@ jobs:
           cp index.html app.js style.css .nojekyll _site/
           sed -i "s/remote-20261028/${{ github.run_id }}/g" _site/index.html
           cp -r assets _site/
-          mkdir -p _site/images
-          cp images/ENDFIELD_SHARE_1793026161.png _site/images/
       - name: Sync Google Photos
         run: node scripts/sync-album.mjs
       - uses: actions/configure-pages@v5
